@@ -17,8 +17,8 @@ app.get("/repositories", (request, response) => {
 
 app.post("/repositories", (request, response) => {    
   const { title, url, techs } = request.body;
-
-  const repository = { id: uuid(), title, url, techs };
+    
+  const repository = { id: uuid(), title, url, techs,  likes: 0};
     
   repositories.push(repository);
   
@@ -40,12 +40,11 @@ app.put("/repositories/:id", (request, response) => {
     return response.status(400).json({ error: "Repository not found." });
   }
 
-  const repository = { id, title, url, techs };
+  repositories[repositoryIndex].title = title || repositories[repositoryIndex].title;
+  repositories[repositoryIndex].url = url || repositories[repositoryIndex].url;
+  repositories[repositoryIndex].techs = techs || repositories[repositoryIndex].techs;
 
-  repositories[repositoryIndex] = repository;
-
-  return response.json(repository);
-
+  return response.json(repositories[repositoryIndex]);
 });
 
 app.delete("/repositories/:id", (request, response) => {
@@ -67,7 +66,7 @@ app.delete("/repositories/:id", (request, response) => {
 });
 
 app.post("/repositories/:id/like", (request, response) => {
-  const id_repository = request.params.id;
+  const id_repository = request.params.id; 
 
   if(!repositories.find(repository => repository.id == id_repository)){
     return response.status(400).json({ error: "Repository not found." });
@@ -76,22 +75,15 @@ app.post("/repositories/:id/like", (request, response) => {
   const like = { id: uuid(), id_repository };
     
   likes.push(like);
+
+  const likes_repository = likes.filter(like => like.id_repository == id_repository).length;
+
+  const indexRepository = repositories.findIndex(repository => repository.id == id_repository);
+
+  repositories[indexRepository].likes = likes_repository;
+
+  return response.json({ likes: likes_repository });
   
-  return response.json(like);
-});
-
-app.get("/repositories/likes", (request, response) => {
-  const { id } = request.query;
-  
-  if(!repositories.find(repository => repository.id == id)){
-    return response.status(400).json({ error: "Repository not found." });
-  }
-
-  const likes_repository = likes.filter(like => like.id_repository == id);  
-
-  return response.json({ repository: id, 
-                         likes: likes_repository.length
-                       });
-});
+}); 
 
 module.exports = app;   
